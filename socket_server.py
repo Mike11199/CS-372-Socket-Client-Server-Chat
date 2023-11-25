@@ -27,11 +27,16 @@ def ascii_game_server_program():
     # reference textbook pg. 164
     # accept incoming connection, send back string, then close socket
     # reference: https://docs.python.org/3/howto/sockets.html
+    conn_client_socket, conn_client_addr = None, None
     while True:
-        conn_client_socket, conn_client_addr = server_socket.accept() # michael - can hang here
-        print(conn_client_socket)
-        print(conn_client_addr)
-        msg_len = get_message_len(conn_client_socket, 4)  # we always receive a 4 byte number for message length
+
+        # this section so we can reuse the same socket, but create a new one if we close it
+        if conn_client_socket is None or conn_client_addr is None:
+            conn_client_socket, conn_client_addr = server_socket.accept()  # michael - can potentially hang here forever if not careful
+            print(conn_client_socket)
+            print(conn_client_addr)
+
+        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
         msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
         print(msg_from_client)
         # conn_client_socket.close()
@@ -64,7 +69,6 @@ def get_message_str_from_client(socket_connection, message_len_byte_expected) ->
     Instead, loop while we haven't received the expected bytes.  We should received 4 bytes, for a 32 bit integer, telling us the
     length of the expected message to be received.
     """
-    message_len_byte_expected = 4
     data_buffer = b""
     while len(data_buffer) < message_len_byte_expected:
         remaining_bytes = message_len_byte_expected - len(data_buffer)

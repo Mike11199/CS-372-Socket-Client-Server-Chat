@@ -7,36 +7,37 @@ import sys
 def ascii_game_client_program():
 
     client_host = '127.0.0.1'  # local host
-    client_port = 65535  # limit as 2^16 port numbers
+    client_port = 65535  # limit as (2^16 - 1) port numbers
     print(f"Host: {client_host}")
     print(f"Port: {client_port}")
-
-    hello_string = "hello"
-    encoded_string = encode_string(hello_string)
-    print(encoded_string)
-    decoded_string = decode_string(encoded_string)
-    print(decoded_string)
 
     # connect to socket set up by server
     client_socket = socket(AF_INET, SOCK_STREAM)
     client_socket.connect((client_host, client_port))
 
-    # send data
-    #client_socket.send(encoded_string)
-    #client_socket.send(b'END TRANSMISSION')
-
-    # print data received from server
-    # https://realpython.com/python-sockets/
-    LENGTH_TEST = 6
-    message_len = LENGTH_TEST.to_bytes(4, byteorder='big')
-    client_socket.send(message_len)
-
     while True:
-        data = client_socket.recv(5)  # can hang here
-        if not data:
-            break
-        print('Received: ',data.decode())
-    client_socket.close()
+        message = input("Enter a message: ")
+        message_to_bytes = encode_string(message)
+        message_len = len(message_to_bytes)
+        message_len_to_fixed_byte_size = message_len.to_bytes(4, byteorder='big')
+        print(message)
+        print(message_to_bytes)
+        print(message_len)
+        print(message_len_to_fixed_byte_size)
+
+
+
+        # print data received from server
+        # https://realpython.com/python-sockets/
+        client_socket.send(message_len_to_fixed_byte_size)
+        client_socket.send(message_to_bytes)
+
+    # while True:
+    #     data = client_socket.recv(5)  # can hang here
+    #     if not data:
+    #         break
+    #     print('Received: ',data.decode())
+    # client_socket.close()
 
 
 def decode_string(str):
