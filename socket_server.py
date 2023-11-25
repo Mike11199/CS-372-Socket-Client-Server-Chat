@@ -1,5 +1,7 @@
+import time
 import socket
 from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
+
 
 conn_client_socket, conn_client_addr = None, None
 
@@ -45,20 +47,25 @@ def ascii_game_server_program():
             print(f"Message from client: {msg_from_client}")
         except:
             print("Server is now listening...")
+            conn_client_socket = None
+            conn_client_addr = None
             continue
 
         # close if message is quit signal
-        if msg_from_client == '\q':
+        if msg_from_client == '/q':
             print("Client closed connection!")
             conn_client_socket.close()
         else:
             # or send response to client
             message = input("“Enter Input > ")
-            if message == '\q':
+            if message == '/q':
                 print("Sending \q to end connection with server!")
                 send_message_to_client(message, conn_client_socket)
+                time.sleep(2) # give client 2 seconds to exit
                 conn_client_socket.close()
-            send_message_to_client(message, conn_client_socket)
+                continue
+            else:
+                send_message_to_client(message, conn_client_socket)
 
 
 
@@ -82,9 +89,6 @@ def get_message_len(socket_conn: socket.socket) -> int:
     Instead, loop while we haven't received the expected bytes.  We should received 4 bytes, for a 32 bit integer, telling us the
     length of the expected message to be received.
     """
-    global conn_client_socket
-    global conn_client_addr
-
     expected_num_bytes = 4
     data_buffer = b""
     while len(data_buffer) < expected_num_bytes:
@@ -92,8 +96,6 @@ def get_message_len(socket_conn: socket.socket) -> int:
         message_from_client = socket_conn.recv(remaining_bytes)
         if message_from_client == b'':
             print("Client closed connection unexpectedly!")
-            conn_client_socket = None
-            conn_client_addr = None
             raise Exception
         data_buffer += message_from_client
     msg_len = int.from_bytes(data_buffer, byteorder="big")
@@ -110,17 +112,12 @@ def get_message_str_from_client(socket_conn: socket.socket, message_len_byte_exp
     Instead, loop while we haven't received the expected bytes.  We should received 4 bytes, for a 32 bit integer, telling us the
     length of the expected message to be received.
     """
-    global conn_client_socket
-    global conn_client_addr
-
     data_buffer = b""
     while len(data_buffer) < message_len_byte_expected:
         remaining_bytes = message_len_byte_expected - len(data_buffer)
         message_from_client = socket_conn.recv(remaining_bytes)
         if message_from_client == b'':
             print("Client closed connection unexpectedly!")
-            conn_client_socket = None
-            conn_client_addr = None
             raise Exception
         data_buffer += message_from_client
     msg = decode_string(data_buffer)

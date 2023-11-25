@@ -19,7 +19,7 @@ def ascii_game_client_program():
     try:
         client_socket = socket.socket(AF_INET, SOCK_STREAM)
         client_socket.connect((client_host, client_port))
-        print("Connected to the server!  Please type \q to close the connection.")
+        print("Connected to the server!  Please type /q to close the connection.")
     except ConnectionRefusedError:
         print("Error, server is not running.")
         sys.exit(0)
@@ -28,10 +28,9 @@ def ascii_game_client_program():
 
         # send message to server
         message = input("“Enter Input > ")
-        if message == '\q':
-            print("Sending \q to end connection with server!")
+        if message == '/q':
+            print("Sending /q to end connection with server!")
             send_message_to_server(message, client_socket)
-            client_socket.close()
             return
         send_message_to_server(message, client_socket)
 
@@ -40,9 +39,9 @@ def ascii_game_client_program():
         server_response_len = get_message_len(client_socket)
         msg_from_server = get_message_str_from_server(client_socket, server_response_len)
         print(f"Message from server: {msg_from_server}")
-        if msg_from_server == '\q':
+        if msg_from_server == '/q':
             print("Server closed connection!")
-            client_socket.close()
+            return
 
 
 def send_message_to_server(message: str, socket_conn: socket.socket) -> None:
