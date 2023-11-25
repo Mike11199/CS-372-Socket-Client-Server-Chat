@@ -69,7 +69,7 @@ def ascii_game_server_program():
             conn_client_socket.close()
         else:
             # or send response to client
-            message = input("“Enter Input > ")
+            message = input("\nEnter Input > ")
             if message == '/q':
                 print("Sending \q to end connection with server!")
                 send_message_to_client(message, conn_client_socket)

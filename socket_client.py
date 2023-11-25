@@ -7,6 +7,13 @@ import sys
 client_socket = None # global so I can keyboard interrupt close the connection
 
 def ascii_game_client_program():
+    """
+    This function acts as a client program.
+
+    It attempts to connect via a socket to an existing server running on that socket's host/port combination.
+
+    Messages can then be sent and received from the server via this socket.
+    """
 
     client_host = '127.0.0.1'  # local host
     client_port = 65535  # limit as (2^16 - 1) port numbers
@@ -27,7 +34,7 @@ def ascii_game_client_program():
     while True:
 
         # send message to server
-        message = input("“Enter Input > ")
+        message = input("\nEnter Input > ")
         if message == '/q':
             print("Sending /q to end connection with server!")
             send_message_to_server(message, client_socket)
