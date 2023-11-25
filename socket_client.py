@@ -1,6 +1,10 @@
-from socket import *
+import socket
+from socket import AF_INET, SOCK_STREAM
+import sys
 
 # Reference:  https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
+
+client_socket = None # global so I can keyboard interrupt close the connection
 
 def ascii_game_client_program():
 
@@ -10,9 +14,15 @@ def ascii_game_client_program():
     print(f"Port: {client_port}")
 
     # connect to socket set up by server
-    client_socket = socket(AF_INET, SOCK_STREAM)
-    client_socket.connect((client_host, client_port))
-    print(f"Connected to the server!  Please type \q to close the connection.")
+    global client_socket
+
+    try:
+        client_socket = socket.socket(AF_INET, SOCK_STREAM)
+        client_socket.connect((client_host, client_port))
+        print("Connected to the server!  Please type \q to close the connection.")
+    except ConnectionRefusedError:
+        print("Error, server is not running.")
+        sys.exit(0)
 
     while True:
 
@@ -22,6 +32,7 @@ def ascii_game_client_program():
             print("Sending \q to end connection with server!")
             send_message_to_server(message, client_socket)
             client_socket.close()
+            return
         send_message_to_server(message, client_socket)
 
         # get response from server
@@ -34,19 +45,23 @@ def ascii_game_client_program():
             client_socket.close()
 
 
-def send_message_to_server(message, socket):
+def send_message_to_server(message: str, socket_conn: socket.socket) -> None:
     # https://realpython.com/python-sockets/
     message_to_bytes = encode_string(message)
     message_len = len(message_to_bytes)
     message_len_to_fixed_byte_size = message_len.to_bytes(4, byteorder='big')
     print(f"Sending Bytes to Server (Hex 0x): {hex(int.from_bytes(message_len_to_fixed_byte_size, byteorder='big'))}")
-    socket.send(message_len_to_fixed_byte_size)
-    socket.send(message_to_bytes)
+    try:
+        socket_conn.send(message_len_to_fixed_byte_size)
+        socket_conn.send(message_to_bytes)
+    except ConnectionResetError:
+        print("Server closed connection!")
+        sys.exit(0)
 
 
 # Reference:
 # https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
-def get_message_len(socket_connection) -> int:
+def get_message_len(socket_conn: socket.socket) -> int:
     """
     This function should get the message length.  We don't use a loop (while data) as that will loop forever unless the socket closes.
 
@@ -57,14 +72,18 @@ def get_message_len(socket_connection) -> int:
     data_buffer = b""
     while len(data_buffer) < expected_num_bytes:
         remaining_bytes = expected_num_bytes - len(data_buffer)
-        data_buffer += socket_connection.recv(remaining_bytes)
+        message_from_server = socket_conn.recv(remaining_bytes)
+        if message_from_server == b'':
+            print("Server closed connection unexpectedly!")
+            sys.exit(0)
+        data_buffer += message_from_server
     msg_len = int.from_bytes(data_buffer, byteorder="big")
     # print(f"Message length is : {msg_len}")
     return msg_len
 
 # Reference:
 # https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
-def get_message_str_from_server(socket_connection, message_len_byte_expected) -> int:
+def get_message_str_from_server(socket_conn: socket.socket, message_len_byte_expected: int) -> int:
     """
     This function should get the message length.  We don't use a loop (while data) as that will loop forever unless the socket closes.
 
@@ -74,17 +93,21 @@ def get_message_str_from_server(socket_connection, message_len_byte_expected) ->
     data_buffer = b""
     while len(data_buffer) < message_len_byte_expected:
         remaining_bytes = message_len_byte_expected - len(data_buffer)
-        data_buffer += socket_connection.recv(remaining_bytes)
+        message_from_server = socket_conn.recv(remaining_bytes)
+        if message_from_server == b'':
+            print("Server closed connection unexpectedly!")
+            sys.exit(0)
+        data_buffer += message_from_server
     msg = decode_string(data_buffer)
     # print(f"Message from client: {msg}")
     return msg
 
 
-def decode_string(str):
-    return str.decode('utf-8')
+def decode_string(message: str) -> str:
+    return message.decode('utf-8')
 
-def encode_string(str):
-    return str.encode('utf-8')
+def encode_string(message: str) -> bytes:
+    return message.encode('utf-8')
 
 
 # https://stackoverflow.com/questions/21120947/catching-keyboardinterrupt-in-python-during-program-shutdown
