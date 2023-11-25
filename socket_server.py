@@ -1,4 +1,7 @@
 from socket import *
+import signal
+import sys
+
 
 
 def ascii_game_server_program():
@@ -23,19 +26,52 @@ def ascii_game_server_program():
     # reference: https://docs.python.org/3/library/socket.html
     # reference textbook pg. 164
     # accept incoming connection, send back string, then close socket
+    # reference: https://docs.python.org/3/howto/sockets.html
     while True:
-        print("restarting loop")
         conn_client_socket, conn_client_addr = server_socket.accept() # michael - can hang here
         print(conn_client_socket)
         print(conn_client_addr)
-        buffer_string = b'buffer'
-        while buffer_string:
-            buffer_string = conn_client_socket.recv(1024)
-            print("Received: ")
-            print(buffer_string)
-        print("Sending Response: ")
-        print(buffer_string)
-        conn_client_socket.send(buffer_string)
+        msg_len = get_message_len(conn_client_socket, 4)  # we always receive a 4 byte number for message length
+        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+        print(msg_from_client)
+        # conn_client_socket.close()
+
+
+# Reference:
+# https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
+def get_message_len(socket_connection) -> int:
+    """
+    This function should get the message length.  We don't use a loop (while data) as that will loop forever unless the socket closes.
+
+    Instead, loop while we haven't received the expected bytes.  We should received 4 bytes, for a 32 bit integer, telling us the
+    length of the expected message to be received.
+    """
+    expected_num_bytes = 4
+    data_buffer = b""
+    while len(data_buffer) < expected_num_bytes:
+        remaining_bytes = expected_num_bytes - len(data_buffer)
+        data_buffer += socket_connection.recv(remaining_bytes)
+    msg_len = int.from_bytes(data_buffer, byteorder="big")
+    print(f"Message length is : {msg_len}")
+    return msg_len
+
+# Reference:
+# https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
+def get_message_str_from_client(socket_connection, message_len_byte_expected) -> int:
+    """
+    This function should get the message length.  We don't use a loop (while data) as that will loop forever unless the socket closes.
+
+    Instead, loop while we haven't received the expected bytes.  We should received 4 bytes, for a 32 bit integer, telling us the
+    length of the expected message to be received.
+    """
+    message_len_byte_expected = 4
+    data_buffer = b""
+    while len(data_buffer) < message_len_byte_expected:
+        remaining_bytes = message_len_byte_expected - len(data_buffer)
+        data_buffer += socket_connection.recv(remaining_bytes)
+    msg = decode_string(data_buffer)
+    print(f"Message is : {msg}")
+    return msg
 
 
 def decode_string(str):
@@ -45,6 +81,15 @@ def encode_string(str):
     return str.encode('utf-8')
 
 
-ascii_game_server_program()
 
-
+# https://stackoverflow.com/questions/21120947/catching-keyboardinterrupt-in-python-during-program-shutdown
+# use signals as ctrl + c is not working
+if __name__ == '__main__':
+    try:
+        ascii_game_server_program()
+    except KeyboardInterrupt:
+        print('Interrupted')
+        try:
+            sys.exit(130)
+        except SystemExit:
+            os._exit(130)
