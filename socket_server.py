@@ -1,11 +1,12 @@
 import time
 import socket
+import random
 from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 
 
 conn_client_socket, conn_client_addr = None, None
 
-def ascii_game_server_program():
+def ascii_game_server_program() -> None:
     """
     This function acts as a server program.
 
@@ -29,7 +30,6 @@ def ascii_game_server_program():
 
     # max num of queued connections is 1
     server_socket.listen(1)
-    print("Server is now listening...")
 
     # reference: https://docs.python.org/3/library/socket.html
     # reference textbook pg. 164
@@ -40,15 +40,15 @@ def ascii_game_server_program():
 
     while True:
 
-        # this section so we can reuse the same socket, but create a new one if we close it
+        # connect to a client if not already connected
         try:
             if conn_client_socket is None or conn_client_addr is None:
+                print("Server is now listening...")
                 conn_client_socket, conn_client_addr = server_socket.accept()  # michael - can potentially hang here forever if not careful
-                print("Connected to a client!")
-                print(conn_client_socket)
-                print(conn_client_addr)
+                print(f"Connected to a client! Socket: {conn_client_socket}  Addr: {conn_client_addr} ")
         except Exception as e:
             print(f"Error creating new connection with client: {e}")
+            continue
 
         # get message from client
         # handle exceptions by closing sockets and re-looping, which will hang at server_socket.accept() until a new socket connects
@@ -57,27 +57,27 @@ def ascii_game_server_program():
             msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
             msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
             print(f"Message from client: {msg_from_client}")
+            if msg_from_client == "play blackjack":
+                print(f"Client requested to play blackjack!")
+                play_blackjack()
         except:
-            print("Server is now listening...")
-            conn_client_socket = None
-            conn_client_addr = None
+            conn_client_socket, conn_client_addr = None, None
             continue
 
-        # close if message is quit signal
-        if msg_from_client == '/q':
-            print("Client closed connection!")
-            conn_client_socket.close()
-        else:
-            # or send response to client
-            message = input("\nEnter Input > ")
-            if message == '/q':
-                print("Sending \q to end connection with server!")
-                send_message_to_client(message, conn_client_socket)
-                time.sleep(2) # give client 2 seconds to exit
-                conn_client_socket.close()
-                continue
-            else:
-                send_message_to_client(message, conn_client_socket)
+        # send response to client
+        message = input("\nEnter Input > ")
+        if message == '/q':
+            send_disconnect_request_to_client(message)
+            continue
+
+        send_message_to_client(message, conn_client_socket)
+
+
+def send_disconnect_request_to_client(message):
+    print("Sending \q to end connection with server!")
+    send_message_to_client(message, conn_client_socket)
+    time.sleep(2) # give client 2 seconds to exit
+    conn_client_socket.close()
 
 
 def send_message_to_client(message: str, socket_conn: socket.socket) -> None:
@@ -150,6 +150,10 @@ def get_message_str_from_client(socket_conn: socket.socket, message_len_byte_exp
         data_buffer += message_from_client
     msg = decode_string(data_buffer)
     # print(f"Message from client: {msg}")
+    if msg == '/q':
+        print("Client closed connection!")
+        socket_conn.close()
+        raise Exception
     return msg
 
 
@@ -158,6 +162,25 @@ def decode_string(message: str) -> str:
 
 def encode_string(message: str) -> bytes:
     return message.encode('utf-8')
+
+
+def play_blackjack():
+    blackjack_game = Blackjack()
+    print(blackjack_game.get_deck())
+
+class Blackjack():
+
+    def __init__(self):
+        card_values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace']
+        card_suits = ['spades', 'clubs', 'hearts', 'diamonds']
+        self._dealer_deck = [(suite, val) for suite in card_suits for val in card_values]
+        random.shuffle(self._dealer_deck)
+        self._server_score = 0
+        self._client_score = 0
+
+    def get_deck(self):
+        return self._dealer_deck
+
 
 
 # https://stackoverflow.com/questions/21120947/catching-keyboardinterrupt-in-python-during-program-shutdown

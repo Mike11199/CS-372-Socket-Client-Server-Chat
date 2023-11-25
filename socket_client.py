@@ -6,7 +6,7 @@ import sys
 
 client_socket = None # global so I can keyboard interrupt close the connection
 
-def ascii_game_client_program():
+def ascii_game_client_program() -> None:
     """
     This function acts as a client program.
 
@@ -48,6 +48,9 @@ def ascii_game_client_program():
         print(f"Message from server: {msg_from_server}")
         if msg_from_server == '/q':
             print("Server closed connection!")
+            sys.exit(0)
+        if msg_from_server == 'play blackjack':
+            print("Entering multiplayer")
             sys.exit(0)
 
 
