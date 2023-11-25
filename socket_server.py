@@ -6,7 +6,14 @@ from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 conn_client_socket, conn_client_addr = None, None
 
 def ascii_game_server_program():
+    """
+    This function acts as a server program.
 
+    It creates a new socket which binds to a specified host/port.  It then waits to accept incoming connections.
+
+    Messages can then be sent and received from a connected client.  If the client disconnects or an exception occurs, it handles
+    this and waits for a new client to connect.
+    """
     server_host = '127.0.0.1' # local host
     server_port = 65535  # limit as 2^16 port numbers
     print(f"Host: {server_host}")
@@ -30,16 +37,21 @@ def ascii_game_server_program():
     # reference: https://docs.python.org/3/howto/sockets.html
     global conn_client_socket
     global conn_client_addr
+
     while True:
 
         # this section so we can reuse the same socket, but create a new one if we close it
-        if conn_client_socket is None or conn_client_addr is None:
-            conn_client_socket, conn_client_addr = server_socket.accept()  # michael - can potentially hang here forever if not careful
-            print("Connected to a client!")
-            print(conn_client_socket)
-            print(conn_client_addr)
+        try:
+            if conn_client_socket is None or conn_client_addr is None:
+                conn_client_socket, conn_client_addr = server_socket.accept()  # michael - can potentially hang here forever if not careful
+                print("Connected to a client!")
+                print(conn_client_socket)
+                print(conn_client_addr)
+        except Exception as e:
+            print(f"Error creating new connection with client: {e}")
 
         # get message from client
+        # handle exceptions by closing sockets and re-looping, which will hang at server_socket.accept() until a new socket connects
         try:
             print("Awaiting message from client...")
             msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
@@ -68,26 +80,39 @@ def ascii_game_server_program():
                 send_message_to_client(message, conn_client_socket)
 
 
-
-
 def send_message_to_client(message: str, socket_conn: socket.socket) -> None:
+    """
+    This function sends a message to the client.  It first takes the message to be sent and calculates its size as a 32 bit integer.
+    The integer is then sent to the client so that it knows how much data to expect from the incoming message.
+
+    Then, the actual message is sent as a stream of bytes to the client.
+
+    If there is some type of exception, the server raises an exception so that the server does not crash.
+    """
     # https://realpython.com/python-sockets/
     message_to_bytes = encode_string(message)
     message_len = len(message_to_bytes)
     message_len_to_fixed_byte_size = message_len.to_bytes(4, byteorder='big')
     print(f"Sending Bytes to Server (Hex 0x): {hex(int.from_bytes(message_len_to_fixed_byte_size, byteorder='big'))}")
-    socket_conn.send(message_len_to_fixed_byte_size)
-    socket_conn.send(message_to_bytes)
+    try:
+        socket_conn.send(message_len_to_fixed_byte_size)
+        socket_conn.send(message_to_bytes)
+    except:
+        print("Error sending message to client!")
+        raise Exception
 
 
 # Reference:
 # https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
 def get_message_len(socket_conn: socket.socket) -> int:
     """
-    This function should get the message length.  We don't use a loop (while data) as that will loop forever unless the socket closes.
+    This function should get the message length expected from the client.  The below recv() will hang until we receive data.
 
-    Instead, loop while we haven't received the expected bytes.  We should received 4 bytes, for a 32 bit integer, telling us the
-    length of the expected message to be received.
+    We loop while we haven't received the expected number of bytes as we might not receive everything at once.  This function should always receive 4 bytes,
+    for a 32 bit integer, telling us the length of the expected message to be received.
+
+    If the client unexpectedly closes  recv() will return an empty bytes object b''.  This is handled by the function raising an exception to its parent,
+    so that the server can loop back and hang on accept() to wait for a new socket client connection.
     """
     expected_num_bytes = 4
     data_buffer = b""
@@ -107,10 +132,13 @@ def get_message_len(socket_conn: socket.socket) -> int:
 # https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
 def get_message_str_from_client(socket_conn: socket.socket, message_len_byte_expected: int) -> str:
     """
-    This function should get the message length.  We don't use a loop (while data) as that will loop forever unless the socket closes.
+    This function should get a full message from the client.  The below recv() will hang until we receive data.
 
-    Instead, loop while we haven't received the expected bytes.  We should received 4 bytes, for a 32 bit integer, telling us the
-    length of the expected message to be received.
+    We loop while we haven't received the expected number of bytes as we might not receive everything at once.  The length of the expected message is
+    received earlier and passed into this function.
+
+    If the client unexpectedly closes recv() will return an empty bytes object b''.  This is handled by the function raising an exception to its parent,
+    so that the server can loop back and hang on accept() to wait for a new socket client connection.
     """
     data_buffer = b""
     while len(data_buffer) < message_len_byte_expected:
@@ -130,7 +158,6 @@ def decode_string(message: str) -> str:
 
 def encode_string(message: str) -> bytes:
     return message.encode('utf-8')
-
 
 
 # https://stackoverflow.com/questions/21120947/catching-keyboardinterrupt-in-python-during-program-shutdown
