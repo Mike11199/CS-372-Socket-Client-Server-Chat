@@ -1,5 +1,4 @@
 from socket import *
-import signal
 import sys
 
 # Reference:  https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
@@ -66,13 +65,10 @@ def get_message_length(socket_connection) -> int:
 
 
 # https://stackoverflow.com/questions/21120947/catching-keyboardinterrupt-in-python-during-program-shutdown
-# use signals as ctrl + c is not working
+# use try/except with keyboard interrupt as ctrl + c is not working when socket waits
 if __name__ == '__main__':
     try:
         ascii_game_client_program()
     except KeyboardInterrupt:
         print('Interrupted')
-        try:
-            sys.exit(130)
-        except SystemExit:
-            os._exit(130)
+        sys.exit(130)
