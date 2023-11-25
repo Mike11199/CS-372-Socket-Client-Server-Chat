@@ -1,0 +1,12 @@
+{
+    "workbench.colorCustomizations": {
+        "terminal.foreground": "#00FD61",
+        "terminal.background": "#181717",
+        "activityBar.background": "#2F2D2A",
+        "titleBar.activeBackground": "#423F3B",
+        "titleBar.activeForeground": "#FCFBFB"
+    },
+    "cSpell.words": [
+        "REUSEADDR"
+    ]
+}
