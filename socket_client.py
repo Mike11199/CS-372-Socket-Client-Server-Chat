@@ -1,5 +1,4 @@
 from socket import *
-import sys
 
 # Reference:  https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
 
@@ -13,41 +12,59 @@ def ascii_game_client_program():
     # connect to socket set up by server
     client_socket = socket(AF_INET, SOCK_STREAM)
     client_socket.connect((client_host, client_port))
+    print(f"Connected to the server!  Please type \q to close the connection.")
 
     while True:
-        message = input("Enter a message: ")
-        message_to_bytes = encode_string(message)
-        message_len = len(message_to_bytes)
-        message_len_to_fixed_byte_size = message_len.to_bytes(4, byteorder='big')
-        print(message)
-        print(message_to_bytes)
-        print(message_len)
-        print(message_len_to_fixed_byte_size)
+
+        # send message to server
+        message = input("“Enter Input > ")
+        if message == '\q':
+            print("Sending \q to end connection with server!")
+            send_message_to_server(message, client_socket)
+            client_socket.close()
+        send_message_to_server(message, client_socket)
+
+        # get response from server
+        print("Awaiting response from server...")
+        server_response_len = get_message_len(client_socket)
+        msg_from_server = get_message_str_from_server(client_socket, server_response_len)
+        print(f"Message from server: {msg_from_server}")
+        if msg_from_server == '\q':
+            print("Server closed connection!")
+            client_socket.close()
 
 
+def send_message_to_server(message, socket):
+    # https://realpython.com/python-sockets/
+    message_to_bytes = encode_string(message)
+    message_len = len(message_to_bytes)
+    message_len_to_fixed_byte_size = message_len.to_bytes(4, byteorder='big')
+    print(f"Sending Bytes to Server (Hex 0x): {hex(int.from_bytes(message_len_to_fixed_byte_size, byteorder='big'))}")
+    socket.send(message_len_to_fixed_byte_size)
+    socket.send(message_to_bytes)
 
-        # print data received from server
-        # https://realpython.com/python-sockets/
-        client_socket.send(message_len_to_fixed_byte_size)
-        client_socket.send(message_to_bytes)
-
-    # while True:
-    #     data = client_socket.recv(5)  # can hang here
-    #     if not data:
-    #         break
-    #     print('Received: ',data.decode())
-    # client_socket.close()
-
-
-def decode_string(str):
-    return str.decode('utf-8')
-
-def encode_string(str):
-    return str.encode('utf-8')
 
 # Reference:
 # https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
-def get_message_length(socket_connection) -> int:
+def get_message_len(socket_connection) -> int:
+    """
+    This function should get the message length.  We don't use a loop (while data) as that will loop forever unless the socket closes.
+
+    Instead, loop while we haven't received the expected bytes.  We should received 4 bytes, for a 32 bit integer, telling us the
+    length of the expected message to be received.
+    """
+    expected_num_bytes = 4
+    data_buffer = b""
+    while len(data_buffer) < expected_num_bytes:
+        remaining_bytes = expected_num_bytes - len(data_buffer)
+        data_buffer += socket_connection.recv(remaining_bytes)
+    msg_len = int.from_bytes(data_buffer, byteorder="big")
+    # print(f"Message length is : {msg_len}")
+    return msg_len
+
+# Reference:
+# https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
+def get_message_str_from_server(socket_connection, message_len_byte_expected) -> int:
     """
     This function should get the message length.  We don't use a loop (while data) as that will loop forever unless the socket closes.
 
@@ -55,13 +72,19 @@ def get_message_length(socket_connection) -> int:
     length of the expected message to be received.
     """
     data_buffer = b""
-    expected_total_bytes = 4
-    while len(data_buffer) < expected_total_bytes:
-        remaining_bytes = expected_total_bytes - len(data_buffer)
+    while len(data_buffer) < message_len_byte_expected:
+        remaining_bytes = message_len_byte_expected - len(data_buffer)
         data_buffer += socket_connection.recv(remaining_bytes)
-    msg_len = int.from_bytes(data_buffer, byteorder="big")
-    print(f"Message length is : {msg_len}")
-    return msg_len
+    msg = decode_string(data_buffer)
+    # print(f"Message from client: {msg}")
+    return msg
+
+
+def decode_string(str):
+    return str.decode('utf-8')
+
+def encode_string(str):
+    return str.encode('utf-8')
 
 
 # https://stackoverflow.com/questions/21120947/catching-keyboardinterrupt-in-python-during-program-shutdown
@@ -71,4 +94,3 @@ if __name__ == '__main__':
         ascii_game_client_program()
     except KeyboardInterrupt:
         print('Interrupted')
-        sys.exit(130)

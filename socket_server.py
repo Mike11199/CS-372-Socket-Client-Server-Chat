@@ -1,7 +1,4 @@
 from socket import *
-import sys
-
-
 
 def ascii_game_server_program():
 
@@ -32,14 +29,38 @@ def ascii_game_server_program():
         # this section so we can reuse the same socket, but create a new one if we close it
         if conn_client_socket is None or conn_client_addr is None:
             conn_client_socket, conn_client_addr = server_socket.accept()  # michael - can potentially hang here forever if not careful
+            print("Connected to a client!")
             print(conn_client_socket)
             print(conn_client_addr)
 
+        # get message from client
+        print("Awaiting message from client...")
         msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
         msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
-        print(msg_from_client)
-        # conn_client_socket.close()
+        print(f"Message from client: {msg_from_client}")
+        if msg_from_client == '\q':
+            print("Client closed connection!")
+            conn_client_socket.close()
 
+        # send response to client
+        message = input("“Enter Input > ")
+        if message == '\q':
+            print("Sending \q to end connection with server!")
+            send_message_to_client(message, conn_client_socket)
+            conn_client_socket.close()
+        send_message_to_client(message, conn_client_socket)
+
+
+
+
+def send_message_to_client(message, socket):
+    # https://realpython.com/python-sockets/
+    message_to_bytes = encode_string(message)
+    message_len = len(message_to_bytes)
+    message_len_to_fixed_byte_size = message_len.to_bytes(4, byteorder='big')
+    print(f"Sending Bytes to Server (Hex 0x): {hex(int.from_bytes(message_len_to_fixed_byte_size, byteorder='big'))}")
+    socket.send(message_len_to_fixed_byte_size)
+    socket.send(message_to_bytes)
 
 # Reference:
 # https://enzircle.hashnode.dev/handling-message-boundaries-in-socket-programming#heading-method-3-message-length-header
@@ -73,7 +94,7 @@ def get_message_str_from_client(socket_connection, message_len_byte_expected) ->
         remaining_bytes = message_len_byte_expected - len(data_buffer)
         data_buffer += socket_connection.recv(remaining_bytes)
     msg = decode_string(data_buffer)
-    print(f"Message is : {msg}")
+    # print(f"Message from client: {msg}")
     return msg
 
 
@@ -92,4 +113,4 @@ if __name__ == '__main__':
         ascii_game_server_program()
     except KeyboardInterrupt:
         print('Interrupted')
-        sys.exit(130)
+
