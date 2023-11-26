@@ -262,9 +262,8 @@ class Blackjack():
         server_choice = 0
         while server_choice != '2':
             self.server_hand_value = self.calculate_hand_value(self.server_hand)
-            print(f"Dealer's Showing Card: {self.dealer_hand[0]}" +
-                  f"\nServer's Cards: {self.server_hand}" +
-                  f"\nServer's Hand Value: {self.server_hand_value}.")
+
+            # CHECK IF SERVER BUSTS IF HAND IS OVER 21
             if self.server_hand_value > 21:
                 self.send_same_msg_to_server_and_client(
                                         "Server Busted!" +
@@ -272,16 +271,32 @@ class Blackjack():
                                         f"\nServer's Cards: {self.server_hand}" +
                                         f"\nServer's Hand Value: {self.server_hand_value}.")
                 return 0
+
+            if self.server_hand_value == 21:
+                self.send_same_msg_to_server_and_client(
+                                        "Server's hand value is 21.  Blackjack!" +
+                                        "\nServer's Turn Results:" +
+                                        f"\nServer's Cards: {self.server_hand}" +
+                                        f"\nServer's Hand Value: {self.server_hand_value}.")
+                return 0
+
+            # PLAY SERVER'S TURN - HANDLE POSSIBLE DISCONNECT
+            print(f"Dealer's Showing Card: {self.dealer_hand[0]}" +
+                  f"\nServer's Cards: {self.server_hand}" +
+                  f"\nServer's Hand Value: {self.server_hand_value}.")
             print("Server's Turn: Enter 1 to hit, 2 to stay.")
             server_choice = input("\nEnter Input > ")
             if server_choice == '/q':
                 send_disconnect_request_to_client('/q')
                 return -1
+
+            # DEAL TO SERVER IF THEY HIT
             if server_choice == '1':
                 server_dealt_card = self.deal_card_out()
                 self.server_hand.append(server_dealt_card)
 
-        # print results to client and terminal then return - we only show client what happened when turn is over
+
+        # WHEN ENTIRE TURN IS OVER - SHOW WHAT HAPPENED TO THE CLIENT
         self.send_same_msg_to_server_and_client("Server's Turn Results:" +
                                                 f"\nServer's Cards: {self.server_hand}" +
                                                 f"\nServer's Hand Value: {self.server_hand_value}.")
@@ -293,9 +308,22 @@ class Blackjack():
 
         while client_choice != '2':
             self.client_hand_value = self.calculate_hand_value(self.client_hand)
+
+            # CHECK IF CLIENT BUSTS IF HAND IS OVER 21
             if self.client_hand_value > 21:
-                self.send_same_msg_to_server_and_client(f"Client busted with hand value of {self.client_hand_value}!")
+                self.send_same_msg_to_server_and_client("Client Busted!" +
+                                                        f"\nClient Hand Value: {self.client_hand_value}" +
+                                                        f"\nClient's Cards: {self.client_hand}")
                 return 0
+
+            # CHECK IF BLACKJACK
+            if self.client_hand_value == 21:
+                self.send_same_msg_to_server_and_client("Client Hand Value is 21. Blackjack!" +
+                                        f"\nClient Hand Value: {self.client_hand_value}" +
+                                        f"\nClient's Cards: {self.client_hand}")
+                return 0
+
+            # PLAY CLIENT TURN - HANDLE POSSIBLE DISCONNECT
             send_message_to_client(f"\nDealer's Showing Card: {self.dealer_hand[0]}" +
                                    f"\nClient's Cards: {self.client_hand}" +
                                    f"\nClient's Hand Value: {self.client_hand_value}" +
@@ -308,6 +336,8 @@ class Blackjack():
             if client_choice == '/q':
                 send_disconnect_request_to_client('/q')
                 return -1
+
+            # DEAL CARD TO CLIENT IF THEY HIT
             if client_choice == '1':
                 client_dealt_card = self.deal_card_out()
                 self.client_hand.append(client_dealt_card)
