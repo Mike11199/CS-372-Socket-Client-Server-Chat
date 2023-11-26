@@ -60,7 +60,8 @@ def ascii_game_server_program() -> None:
             if msg_from_client == "play blackjack":
                 print(f"Client requested to play blackjack!")
                 play_blackjack()
-        except:
+        except Exception as e:
+            print(f"Error: {e}")
             conn_client_socket, conn_client_addr = None, None
             continue
 
@@ -166,7 +167,21 @@ def encode_string(message: str) -> bytes:
 
 def play_blackjack():
     blackjack_game = Blackjack()
-    print(blackjack_game.get_deck())
+    # print(blackjack_game.get_deck())
+
+    # play 3 rounds then decide winner so should have enough cards hopefully
+    while blackjack_game.get_turn_count() < 3:
+        blackjack_game.deal_first_cards_out()
+        blackjack_game.play_server_turn()
+        blackjack_game.play_client_turn(blackjack_game)
+        blackjack_game.play_dealer_turn(blackjack_game)
+        blackjack_game.calculate_round_result(blackjack_game)
+        blackjack_game.increment_turn_count()
+
+    blackjack_game.calculate_winner()
+
+
+
 
 class Blackjack():
 
@@ -175,11 +190,136 @@ class Blackjack():
         card_suits = ['spades', 'clubs', 'hearts', 'diamonds']
         self._dealer_deck = [(suite, val) for suite in card_suits for val in card_values]
         random.shuffle(self._dealer_deck)
-        self._server_score = 0
-        self._client_score = 0
+        self.server_score = 0
+        self.client_score = 0
+        self._turn_count = 1
+        self.client_hand = []
+        self.server_hand = []
+        self.dealer_hand = []
+        self.client_hand_value = 0
+        self.server_hand_value = 0
+        self.dealer_hand_value = 0
 
     def get_deck(self):
         return self._dealer_deck
+
+    def deal_card_out(self):
+        return self._dealer_deck.pop(0)
+
+    def get_turn_count(self):
+        return self._turn_count
+
+    def increment_turn_count(self):
+        self._turn_count += 1
+
+    def deal_first_cards_out(self):
+        self.client_hand.append(self.deal_card_out())
+        self.server_hand.append(self.deal_card_out())
+        self.dealer_hand.append(self.deal_card_out())
+        self.client_hand.append(self.deal_card_out())
+        self.server_hand.append(self.deal_card_out())
+        self.dealer_hand.append(self.deal_card_out())
+
+    def calculate_hand_value(self, hand):
+        hand_val = 0
+        for card in hand:
+            card_value = card[1]
+            if card_value in [ 'jack', 'queen', 'king']:
+                card_value = 10
+            if card_value == 'ace':
+                card_value = 11
+            hand_val += int(card_value)
+
+        # see if bust and if so see if any aces can be turned to 1s
+        if hand_val > 21:
+            for card in hand:
+                card_value = card[1]
+                if card_value == 'ace':
+                    hand_val -= 10
+        return hand_val
+
+    def play_server_turn(self):
+        server_choice = 0
+        while server_choice != '2':
+            self.server_hand_value = self.calculate_hand_value(self.server_hand)
+            print(f"server hand value: {self.server_hand_value}")
+            if self.server_hand_value > 21:
+                print("Server busted!")
+                continue
+            print("Server's Turn: Enter 1 to hit, 2 to stay.")
+            server_choice = input("\nEnter Input > ")
+            if server_choice == '/q':
+                send_disconnect_request_to_client('/q')
+                continue
+            if server_choice == '1':
+                server_dealt_card = self.deal_card_out()
+                self.server_hand.append(server_dealt_card)
+
+    def play_client_turn(self):
+        client_choice = 0
+
+        while client_choice != '2':
+            self.client_hand_value = self.calculate_hand_value(self.client_hand)
+            if self.client_hand_value > 21:
+                print("Client busted!")
+                send_message_to_client("Client busted! Please press 1 to continue.", conn_client_socket)
+                msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+                client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+                continue
+            send_message_to_client("Client's Turn: Enter 1 to hit, 2 to stay.", conn_client_socket)
+            print("Client's Turn: Enter 1 to hit, 2 to stay.")
+            client_choice = input("\nEnter Input > ")
+            msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+            client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+            if client_choice == '/q':
+                send_disconnect_request_to_client('/q')
+                continue
+            if client_choice == '1':
+                client_dealt_card = self.deal_card_out()
+                self.client_hand.append(client_dealt_card)
+                send_message_to_client(f"Client got card: {client_dealt_card}.  Client Hand: {self.client_hand()}.  Press 1 to continue.", conn_client_socket)
+                msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+                continue_str = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+
+
+
+    def play_dealer_turn(self):
+
+        self.dealer_hand_value = self.calculate_hand_value(self.dealer_hand)
+
+        while self.dealer_hand_value < 17:
+            if self.dealer_hand_value > 21:
+                print("Dealer busted!")
+                continue
+            dealer_dealt_card = self.deal_card_out()
+            self.dealer_hand.append(dealer_dealt_card)
+            self.dealer_hand_value = self.calculate_hand_value(self.dealer_hand)
+
+
+
+    def calculate_round_result(self):
+
+        if self.dealer_hand_value > 21:
+            if self.client_hand_value < 22:
+                self.client_score += 100
+            if self.server_hand_value < 22:
+                self.server_score += 100
+        else:
+             if self.client_hand_value >= self.dealer_hand_value:
+                self.client_score += 100
+             if self.server_hand_value >= self.dealer_hand_value:
+                self.server_score += 100
+
+    def calculate_winner(self):
+
+        if self.client_score == self.server_score:
+            print("tie")
+        elif self.client_score > self.server_score:
+            print("client wins")
+        else:
+            print("server wins")
+
+
 
 
 
