@@ -94,7 +94,7 @@ def send_message_to_client(message: str, socket_conn: socket.socket) -> None:
     message_to_bytes = encode_string(message)
     message_len = len(message_to_bytes)
     message_len_to_fixed_byte_size = message_len.to_bytes(4, byteorder='big')
-    print(f"Sending Bytes to Server (Hex 0x): {hex(int.from_bytes(message_len_to_fixed_byte_size, byteorder='big'))}")
+    # print(f"Sending Bytes to Server (Hex 0x): {hex(int.from_bytes(message_len_to_fixed_byte_size, byteorder='big'))}")
     try:
         socket_conn.send(message_len_to_fixed_byte_size)
         socket_conn.send(message_to_bytes)
@@ -172,15 +172,19 @@ def play_blackjack():
     # play 3 rounds then decide winner so should have enough cards hopefully
     while blackjack_game.get_turn_count() < 3:
         blackjack_game.deal_first_cards_out()
-        blackjack_game.play_server_turn()
-        blackjack_game.play_client_turn()
+        val = blackjack_game.play_server_turn()
+        if val == -1:
+            print("server disconnected")
+            return
+        val = blackjack_game.play_client_turn()
+        if val == -1:
+            print("client disconnected")
+            return
         blackjack_game.play_dealer_turn()
         blackjack_game.calculate_round_result()
         blackjack_game.increment_turn_count()
 
     blackjack_game.calculate_winner()
-
-
 
 
 class Blackjack():
@@ -245,15 +249,16 @@ class Blackjack():
             print(f"server hand value: {self.server_hand_value}")
             if self.server_hand_value > 21:
                 print("Server busted!")
-                continue
+                return 0
             print("Server's Turn: Enter 1 to hit, 2 to stay.")
             server_choice = input("\nEnter Input > ")
             if server_choice == '/q':
                 send_disconnect_request_to_client('/q')
-                continue
+                return -1
             if server_choice == '1':
                 server_dealt_card = self.deal_card_out()
                 self.server_hand.append(server_dealt_card)
+        return 0
 
     def play_client_turn(self):
         client_choice = 0
@@ -265,14 +270,14 @@ class Blackjack():
                 send_message_to_client("Client busted! Please press 1 to continue.", conn_client_socket)
                 msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
                 client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
-                continue
-            send_message_to_client(f"Client's Turn: Enter 1 to hit, 2 to stay.  Client's cards: {self.client_hand()}  Client hand value: {self.client_hand_value} ", conn_client_socket)
-            print(f"Server awaiting client's turn: Client's cards: {self.client_hand()} ")
+                return 0
+            send_message_to_client(f"Client's Turn: Enter 1 to hit, 2 to stay.  Client's cards: {self.client_hand}  Client hand value: {self.client_hand_value} ", conn_client_socket)
+            print(f"Server awaiting client's turn: Client's cards: {self.client_hand} ")
             msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
             client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
             if client_choice == '/q':
                 send_disconnect_request_to_client('/q')
-                continue
+                return -1
             if client_choice == '1':
                 client_dealt_card = self.deal_card_out()
                 self.client_hand.append(client_dealt_card)
@@ -281,7 +286,7 @@ class Blackjack():
                 msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
                 continue_str = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
-
+        return 0
 
     def play_dealer_turn(self):
 
