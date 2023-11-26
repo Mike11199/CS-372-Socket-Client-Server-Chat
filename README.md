@@ -1,6 +1,21 @@
 # TCP-Socket-Client-Server-Chat-Blackjack-Game
 
-# Screenshots
+# Socket Logic Screenshots
+
+- The client/server will always first send a 32 bit (4 byte) integer indiciating the length of the message it is going to send.  This is due to the fact that there is no EOF transmission field on a socket.
+- Otherwise the client/server could hang forever on the recv() call as it waits for additional bytes
+- After sending the message length. The program then sends the message itself over the socket.
+
+![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/48d65eaf-b3b9-4c1e-a2bc-a22e052bff88)
+
+- When receiving a message, the program first receives exactly 4 bytes of data telling it the message length.  Then opens the socket to receives that many bytes of data.
+
+![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/eb05c2c3-2714-48b1-8826-5035a7f18184)
+
+
+
+
+# Terminal Screenshots
 
 - Server Start:
 
