@@ -16,28 +16,27 @@
 
 - Server Turn:
 
-  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/2cea685a-ff99-4785-a5f0-0e23223f0d6c)
-  <img src="" width="700" />
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/2cea685a-ff99-4785-a5f0-0e23223f0d6c" width="700" />
 
 - Client is notified of server's round results via socket:
 
-  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/03e88278-cf65-4b1e-99e1-d9955e5ce1cb)
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/03e88278-cf65-4b1e-99e1-d9955e5ce1cb" width="700" />
 
 - Round results by calculating dealer's hand versus players' hands.
 
-  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/52dfec9b-90c5-4c1f-819c-4dc8acf63a89)
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/52dfec9b-90c5-4c1f-819c-4dc8acf63a89" width="700" />
 
   - Handled when a player gets blackjack:
  
-    ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/88fb401b-cebc-4cef-8bf4-403ae3b9b9c6)
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/88fb401b-cebc-4cef-8bf4-403ae3b9b9c6" width="700" />
 
 - Handled when a player busts - hand value over 21:
-
-  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/266adace-0c64-4dd9-8d80-9575bc83eace)
+  
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/266adace-0c64-4dd9-8d80-9575bc83eace" width="700" />
 
 - Showed results of game to client/server then resume normal chat function over TCP sockets:
 
-  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/015106fa-5ce5-4acd-991c-3d286d67e2ed)
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/015106fa-5ce5-4acd-991c-3d286d67e2ed" width="700" />
 
 
 # Wireshark Packet Inspection 
