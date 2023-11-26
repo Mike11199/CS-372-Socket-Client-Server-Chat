@@ -21,6 +21,22 @@
 ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/eb05c2c3-2714-48b1-8826-5035a7f18184)
 
 
+# Game Logic Screenshots
+
+- Blackjack class constructor which sets up a deck of 52 cards as a series of tuples.
+
+  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/536945be-2d1a-4465-ade7-84b097a560d7)
+
+- Class method to play the game:
+  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/32636dd6-a9fe-4cf0-93e2-3441354163c2)
+
+- Function to calculate hand value of cards:
+
+  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/c45a1636-6cd9-4ef5-a782-48d87b8435f8)
+
+- Example of the function that handles the client's turn, repeatedly prompting the client for a '1' to hit or a '2' to stay.  It also handles cases where the client busts or gets 21 - blackjack.
+
+![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/b3d8b44d-9103-4117-8ad4-81dc35a39e01)
 
 
 # Terminal Screenshots
