@@ -1,10 +1,14 @@
+# How to Run
+- First start the server with `python socket_server.py`
+- Then the client can be started with `python socket_client.py`
+
 # TCP-Socket-Client-Server-Chat-Blackjack-Game
 
 - Portfolio project for CS 372 - Introduction to Computer Networks.
 - This project is allowed to be posted to a public GitHub repo after the class ends.
 - The project implements a client/server chat program via TCP sockets.
 - A multiplayer game of blackjack can also be played if the client sends the string 'play blackjack' to the server.  Game logic is hosted in a blackjack class on the server.
-- First start the server with python socket_server.py.  Then the client can be started with python socket_client.py.
+
 - At any time, the client/server can stop by sending 'q/' to the other, which will cause both programs to terminate.
 - In all other cases, try/excepts handle unexpected closures of the connection by either party.  The server will continue to run and not crash regardless of what happens, and can continue to accept a client connection.
 
