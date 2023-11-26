@@ -27,6 +27,7 @@ def ascii_game_client_program() -> None:
         client_socket = socket.socket(AF_INET, SOCK_STREAM)
         client_socket.connect((client_host, client_port))
         print("Connected to the server!  Please type /q to close the connection.")
+        print("Type in 'play blackjack' to play a multiplayer game with the server in 3 rounds!!")
     except ConnectionRefusedError:
         print("Error, server is not running.")
         sys.exit(0)

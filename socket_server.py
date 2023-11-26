@@ -326,10 +326,10 @@ class Blackjack():
                 self.server_score += 100
                 server_win = True
         else:
-             if self.client_hand_value >= self.dealer_hand_value:
+             if self.client_hand_value >= self.dealer_hand_value and self.client_hand_value < 22:
                 self.client_score += 100
                 client_win = True
-             if self.server_hand_value >= self.dealer_hand_value:
+             if self.server_hand_value >= self.dealer_hand_value and self.server_hand_value < 22:
                 self.server_score += 100
                 server_win = True
 
