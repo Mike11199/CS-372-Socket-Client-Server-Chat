@@ -51,8 +51,8 @@ def ascii_game_client_program() -> None:
             print("Server closed connection!")
             sys.exit(0)
         if msg_from_server == 'play blackjack':
-            print("Entering multiplayer")
-            sys.exit(0)
+            print("The server has indicated it wishes to play blackjack!  Please type (play blackjack) without parentheses to confirm and start a game.")
+
 
 
 def send_message_to_server(message: str, socket_conn: socket.socket) -> None:

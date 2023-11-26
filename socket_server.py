@@ -60,6 +60,7 @@ def ascii_game_server_program() -> None:
             if msg_from_client == "play blackjack":
                 print(f"Client requested to play blackjack!")
                 play_blackjack()
+                continue
         except Exception as e:
             print(f"Error: {e}")
             conn_client_socket, conn_client_addr = None, None
@@ -170,7 +171,7 @@ def play_blackjack():
     # print(blackjack_game.get_deck())
 
     # play 3 rounds then decide winner so should have enough cards hopefully
-    while blackjack_game.get_turn_count() < 3:
+    while blackjack_game.get_turn_count() < 4:
         blackjack_game.deal_first_cards_out()
         val = blackjack_game.play_server_turn()
         if val == -1:
@@ -342,16 +343,16 @@ class Blackjack():
 
         if self.client_score == self.server_score:
             print(f"GAME OVER - Tie!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.")
-            send_message_to_client(f"GAME OVER - Tie!  Client Score: {self.client_score} Server Score: {self.server_score}. Press any key to continue and resume normal chat function.", conn_client_socket)
+            send_message_to_client(f"GAME OVER - Tie!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.", conn_client_socket)
         elif self.client_score > self.server_score:
             print(f"GAME OVER - Client Wins!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.")
-            send_message_to_client(f"GAME OVER - Client Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Press any key to continue and resume normal chat function.", conn_client_socket)
+            send_message_to_client(f"GAME OVER - Client Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Resuming normal chat function.", conn_client_socket)
         else:
             print(f"GAME OVER - Server Wins!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.")
-            send_message_to_client(f"GAME OVER - Server Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Press any key to continue and resume normal chat function.", conn_client_socket)
+            send_message_to_client(f"GAME OVER - Server Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Resuming normal chat function.", conn_client_socket)
 
-        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
-        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+        # msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+        # msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
 
 
