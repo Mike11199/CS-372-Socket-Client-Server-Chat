@@ -173,9 +173,9 @@ def play_blackjack():
     while blackjack_game.get_turn_count() < 3:
         blackjack_game.deal_first_cards_out()
         blackjack_game.play_server_turn()
-        blackjack_game.play_client_turn(blackjack_game)
-        blackjack_game.play_dealer_turn(blackjack_game)
-        blackjack_game.calculate_round_result(blackjack_game)
+        blackjack_game.play_client_turn()
+        blackjack_game.play_dealer_turn()
+        blackjack_game.calculate_round_result()
         blackjack_game.increment_turn_count()
 
     blackjack_game.calculate_winner()
@@ -268,7 +268,6 @@ class Blackjack():
                 continue
             send_message_to_client("Client's Turn: Enter 1 to hit, 2 to stay.", conn_client_socket)
             print("Client's Turn: Enter 1 to hit, 2 to stay.")
-            client_choice = input("\nEnter Input > ")
             msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
             client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
             if client_choice == '/q':
