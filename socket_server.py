@@ -266,8 +266,8 @@ class Blackjack():
                 msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
                 client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
                 continue
-            send_message_to_client("Client's Turn: Enter 1 to hit, 2 to stay.", conn_client_socket)
-            print("Client's Turn: Enter 1 to hit, 2 to stay.")
+            send_message_to_client(f"Client's Turn: Enter 1 to hit, 2 to stay.  Client's cards: {self.client_hand()}  Client hand value: {self.client_hand_value} ", conn_client_socket)
+            print(f"Server awaiting client's turn: Client's cards: {self.client_hand()} ")
             msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
             client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
             if client_choice == '/q':
@@ -276,7 +276,8 @@ class Blackjack():
             if client_choice == '1':
                 client_dealt_card = self.deal_card_out()
                 self.client_hand.append(client_dealt_card)
-                send_message_to_client(f"Client got card: {client_dealt_card}.  Client Hand: {self.client_hand()}.  Press 1 to continue.", conn_client_socket)
+                print(f"Info for Server: Client got card: {client_dealt_card}.")
+                send_message_to_client(f"Client got card: {client_dealt_card}. Press 1 to continue.", conn_client_socket)
                 msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
                 continue_str = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
