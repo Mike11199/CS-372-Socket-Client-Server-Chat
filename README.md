@@ -69,11 +69,11 @@
 
   <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/52dfec9b-90c5-4c1f-819c-4dc8acf63a89" width="700" />
 
-  - Handled when a player gets blackjack:
+- Logic handles when a player gets blackjack - a hand value of 21.
  
   <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/88fb401b-cebc-4cef-8bf4-403ae3b9b9c6" width="700" />
 
-- Handled when a player busts - hand value over 21:
+- Logic handles when a player busts - a hand value over 21:
   
   <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/266adace-0c64-4dd9-8d80-9575bc83eace" width="700" />
 
