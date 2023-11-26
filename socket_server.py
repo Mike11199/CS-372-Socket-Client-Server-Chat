@@ -262,7 +262,7 @@ class Blackjack():
         server_choice = 0
         while server_choice != '2':
             self.server_hand_value = self.calculate_hand_value(self.server_hand)
-            print(f"Server hand value: {self.server_hand_value} \nServer Cards: {self.server_hand} \nDealer's Showing Card: {self.dealer_hand[0]}")
+            print(f"Dealer's Showing Card: {self.dealer_hand[0]} \nServer's Cards: {self.server_hand} \nServer's Hand Value: {self.server_hand_value}.")
             if self.server_hand_value > 21:
                 print("Server busted!")
                 return 0
@@ -276,7 +276,7 @@ class Blackjack():
                 self.server_hand.append(server_dealt_card)
 
         # print results to client and terminal then return - we only show client what happened when turn is over
-        self.send_same_msg_to_server_and_client(f"Server turn results: \nServer hand value: {self.server_hand_value}. \nServer cards: {self.server_hand}.")
+        self.send_same_msg_to_server_and_client(f"Server's Turn Results: \nServer's Cards: {self.server_hand} \nServer's Hand Value: {self.server_hand_value}.")
         return 0
 
 
@@ -288,10 +288,13 @@ class Blackjack():
             if self.client_hand_value > 21:
                 self.send_same_msg_to_server_and_client(f"Client busted with hand value of {self.client_hand_value}!")
                 return 0
-            send_message_to_client(f"Client's Turn: Enter 1 to hit, 2 to stay. \nClient's cards: {self.client_hand} \n" +
-                                   f"Client hand value: {self.client_hand_value} \nDealer's Showing Card" +
-                                   f"{self.dealer_hand[0]}", conn_client_socket)
-            print(f"Server awaiting client's turn: \n Client's cards: {self.client_hand} ")
+            send_message_to_client(f"\nDealer's Showing Card: {self.dealer_hand[0]}" +
+                                   f"\nClient's Cards: {self.client_hand}" +
+                                   f"\nClient's Hand Value: {self.client_hand_value}" +
+                                   f"\nDealer's Showing Card {self.dealer_hand[0]}" +
+                                   f"\nClient's Turn: Enter 1 to hit, 2 to stay."
+                                   , conn_client_socket)
+            print(f"Client's Cards: {self.client_hand} \nServer awaiting client's turn...")
             msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
             client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
             if client_choice == '/q':
@@ -300,7 +303,7 @@ class Blackjack():
             if client_choice == '1':
                 client_dealt_card = self.deal_card_out()
                 self.client_hand.append(client_dealt_card)
-                self.send_same_msg_to_server_and_client(f" Client got card: {client_dealt_card}.")
+                self.send_same_msg_to_server_and_client(f"Client got card: {client_dealt_card}.")
 
         return 0
 
