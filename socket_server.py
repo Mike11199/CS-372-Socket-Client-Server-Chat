@@ -58,7 +58,7 @@ def ascii_game_server_program() -> None:
             msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
             print(f"Message from client: {msg_from_client}")
             if msg_from_client == "play blackjack":
-                print(f"Client requested to play blackjack!")
+                print("Client requested to play blackjack!\n")
                 play_blackjack()
                 continue
         except Exception as e:
@@ -194,6 +194,7 @@ class Blackjack():
     def play_multiplayer_blackjack_game(self):
 
         # play 3 rounds then decide winner so should have enough cards hopefully
+        self.send_same_msg_to_server_and_client("********************BLACKJACK MULTIPLAYER CLIENT/SERVER GAME OVER SOCKETS**************************************")
         while self.turn_count < 4:
             self.deal_first_cards_out()
 
@@ -266,7 +267,11 @@ class Blackjack():
                   f"\nServer's Cards: {self.server_hand}" +
                   f"\nServer's Hand Value: {self.server_hand_value}.")
             if self.server_hand_value > 21:
-                print("Server busted!")
+                self.send_same_msg_to_server_and_client(
+                                        "Server Busted!" +
+                                        "\nServer's Turn Results:" +
+                                        f"\nServer's Cards: {self.server_hand}" +
+                                        f"\nServer's Hand Value: {self.server_hand_value}.")
                 return 0
             print("Server's Turn: Enter 1 to hit, 2 to stay.")
             server_choice = input("\nEnter Input > ")
