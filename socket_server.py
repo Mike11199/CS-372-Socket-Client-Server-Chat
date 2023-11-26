@@ -2,7 +2,7 @@ import time
 import socket
 import random
 from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
-
+import sys
 
 conn_client_socket, conn_client_addr = None, None
 
@@ -76,10 +76,12 @@ def ascii_game_server_program() -> None:
 
 
 def send_disconnect_request_to_client(message):
-    print("Sending \q to end connection with server!")
+    print("Sending \q to end connection with client!")
     send_message_to_client(message, conn_client_socket)
     time.sleep(2) # give client 2 seconds to exit
+    sys.exit(0)
     conn_client_socket.close()
+    sys.exit(0)
 
 
 def send_message_to_client(message: str, socket_conn: socket.socket) -> None:
@@ -216,13 +218,13 @@ class Blackjack():
     def deal_card_out(self):
         return self._dealer_deck.pop(0)
 
-    def get_turn_count(self):
+    def get_turn_count(self) -> int:
         return self._turn_count
 
-    def increment_turn_count(self):
+    def increment_turn_count(self) -> None:
         self._turn_count += 1
 
-    def deal_first_cards_out(self):
+    def deal_first_cards_out(self) -> None:
         self.client_hand = []
         self.server_hand = []
         self.dealer_hand = []
@@ -233,7 +235,7 @@ class Blackjack():
         self.server_hand.append(self.deal_card_out())
         self.dealer_hand.append(self.deal_card_out())
 
-    def calculate_hand_value(self, hand):
+    def calculate_hand_value(self, hand) -> int:
         hand_val = 0
         for card in hand:
             card_value = card[1]
@@ -251,7 +253,7 @@ class Blackjack():
                     hand_val -= 10
         return hand_val
 
-    def play_server_turn(self):
+    def play_server_turn(self) -> int:
         server_choice = 0
         while server_choice != '2':
             self.server_hand_value = self.calculate_hand_value(self.server_hand)
@@ -269,7 +271,7 @@ class Blackjack():
                 self.server_hand.append(server_dealt_card)
         return 0
 
-    def play_client_turn(self):
+    def play_client_turn(self) -> int:
         client_choice = 0
 
         while client_choice != '2':
@@ -297,7 +299,7 @@ class Blackjack():
 
         return 0
 
-    def play_dealer_turn(self):
+    def play_dealer_turn(self) -> None:
 
         self.dealer_hand_value = self.calculate_hand_value(self.dealer_hand)
 
@@ -314,7 +316,7 @@ class Blackjack():
         msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
 
-    def calculate_round_result(self):
+    def calculate_round_result(self) -> None:
 
         server_win = False
         client_win = False
@@ -339,7 +341,7 @@ class Blackjack():
         msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
         msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
-    def calculate_winner(self):
+    def calculate_winner(self) -> None:
 
         if self.client_score == self.server_score:
             print(f"GAME OVER - Tie!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.")
