@@ -3,20 +3,21 @@
 # Screenshots
 
 - Server Start:
-  
-![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/f4690044-a50c-465e-816b-c9c81802c5f0)
+
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/f4690044-a50c-465e-816b-c9c81802c5f0" width="700" />
 
 - Client Start:
-  
-![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/21d12683-117d-4494-ac52-c021ac4de1e6)
+
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/21d12683-117d-4494-ac52-c021ac4de1e6" width="700" />
 
 - Game Start:
-
-  ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/4b36380c-9cf3-4fc3-9c89-a130b5bba997)
+  
+  <img src="https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/4b36380c-9cf3-4fc3-9c89-a130b5bba997" width="700" />  
 
 - Server Turn:
 
   ![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/2cea685a-ff99-4785-a5f0-0e23223f0d6c)
+  <img src="" width="700" />
 
 - Client is notified of server's round results via socket:
 
