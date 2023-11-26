@@ -46,7 +46,7 @@ def ascii_game_client_program() -> None:
         print("Awaiting response from server...")
         server_response_len = get_message_len(client_socket)
         msg_from_server = get_message_str_from_server(client_socket, server_response_len)
-        print(f"Message from server: {msg_from_server}")
+        print(f"Message from server:\n{msg_from_server}")
         if msg_from_server == '/q':
             print("Server closed connection!")
             sys.exit(0)

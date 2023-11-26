@@ -56,7 +56,7 @@ def ascii_game_server_program() -> None:
             print("Awaiting message from client...")
             msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
             msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
-            print(f"Message from client: {msg_from_client}")
+            print(f"Message from client: \n{msg_from_client}")
             if msg_from_client == "play blackjack":
                 print("Client requested to play blackjack!\n")
                 play_blackjack()
