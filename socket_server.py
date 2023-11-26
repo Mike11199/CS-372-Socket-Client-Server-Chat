@@ -176,10 +176,15 @@ def play_blackjack():
         if val == -1:
             print("server disconnected")
             return
+        send_message_to_client(f"Server turn results.  Server hand value: {blackjack_game.server_hand_value}.  Server cards: {blackjack_game.server_hand}. Press any key to continue.", conn_client_socket)
+        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+        print("Awaiting client's turn...")
         val = blackjack_game.play_client_turn()
         if val == -1:
             print("client disconnected")
             return
+        print("Awaiting dealer's turn...")
         blackjack_game.play_dealer_turn()
         blackjack_game.calculate_round_result()
         blackjack_game.increment_turn_count()
@@ -246,7 +251,7 @@ class Blackjack():
         server_choice = 0
         while server_choice != '2':
             self.server_hand_value = self.calculate_hand_value(self.server_hand)
-            print(f"server hand value: {self.server_hand_value}")
+            print(f"Server hand value: {self.server_hand_value}  Server Cards: {self.server_hand}")
             if self.server_hand_value > 21:
                 print("Server busted!")
                 return 0
@@ -267,7 +272,7 @@ class Blackjack():
             self.client_hand_value = self.calculate_hand_value(self.client_hand)
             if self.client_hand_value > 21:
                 print("Client busted!")
-                send_message_to_client("Client busted! Please press 1 to continue.", conn_client_socket)
+                send_message_to_client("Client busted! Please press any key to continue.", conn_client_socket)
                 msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
                 client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
                 return 0

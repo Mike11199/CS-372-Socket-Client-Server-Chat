@@ -67,7 +67,7 @@ def send_message_to_server(message: str, socket_conn: socket.socket) -> None:
     message_to_bytes = encode_string(message)
     message_len = len(message_to_bytes)
     message_len_to_fixed_byte_size = message_len.to_bytes(4, byteorder='big')
-    print(f"Sending Bytes to Server (Hex 0x): {hex(int.from_bytes(message_len_to_fixed_byte_size, byteorder='big'))}")
+    # print(f"Sending Bytes to Server (Hex 0x): {hex(int.from_bytes(message_len_to_fixed_byte_size, byteorder='big'))}")
     try:
         socket_conn.send(message_len_to_fixed_byte_size)
         socket_conn.send(message_to_bytes)
