@@ -170,29 +170,7 @@ def encode_string(message: str) -> bytes:
 
 def play_blackjack():
     blackjack_game = Blackjack()
-    # print(blackjack_game.get_deck())
-
-    # play 3 rounds then decide winner so should have enough cards hopefully
-    while blackjack_game.get_turn_count() < 4:
-        blackjack_game.deal_first_cards_out()
-        val = blackjack_game.play_server_turn()
-        if val == -1:
-            print("server disconnected")
-            return
-        send_message_to_client(f"Server turn results.  Server hand value: {blackjack_game.server_hand_value}.  Server cards: {blackjack_game.server_hand}. Press any key to continue.", conn_client_socket)
-        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
-        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
-        print("Awaiting client's turn...")
-        val = blackjack_game.play_client_turn()
-        if val == -1:
-            print("client disconnected")
-            return
-        print("Awaiting dealer's turn...")
-        blackjack_game.play_dealer_turn()
-        blackjack_game.calculate_round_result()
-        blackjack_game.increment_turn_count()
-
-    blackjack_game.calculate_winner()
+    blackjack_game.play_multiplayer_blackjack_game()
 
 
 class Blackjack():
@@ -200,11 +178,11 @@ class Blackjack():
     def __init__(self):
         card_values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace']
         card_suits = ['spades', 'clubs', 'hearts', 'diamonds']
-        self._dealer_deck = [(suite, val) for suite in card_suits for val in card_values]
+        self._dealer_deck = [(suite, val) for suite in card_suits for val in card_values]  # list comprehension make card tuples s/b 52 items
         random.shuffle(self._dealer_deck)
         self.server_score = 0
         self.client_score = 0
-        self._turn_count = 1
+        self.turn_count = 1
         self.client_hand = []
         self.server_hand = []
         self.dealer_hand = []
@@ -212,17 +190,42 @@ class Blackjack():
         self.server_hand_value = 0
         self.dealer_hand_value = 0
 
-    def get_deck(self):
-        return self._dealer_deck
+
+    def play_multiplayer_blackjack_game(self):
+
+        # play 3 rounds then decide winner so should have enough cards hopefully
+        while self.turn_count() < 4:
+            self.deal_first_cards_out()
+
+            # server turn
+            val = self.play_server_turn()
+            if val == -1:
+                print("server disconnected")
+                return
+            print("Awaiting client's turn...")
+
+            # client turn
+            val = self.play_client_turn()
+            if val == -1:
+                print("client disconnected")
+                return
+            print("Awaiting dealer's turn...")
+
+            # dealer turn and calculate round results
+            self.play_dealer_turn()
+            self.calculate_round_result()
+            self.increment_turn_count()
+
+        self.calculate_winner()
+
 
     def deal_card_out(self):
         return self._dealer_deck.pop(0)
 
-    def get_turn_count(self) -> int:
-        return self._turn_count
 
     def increment_turn_count(self) -> None:
-        self._turn_count += 1
+        self.turn_count += 1
+
 
     def deal_first_cards_out(self) -> None:
         self.client_hand = []
@@ -235,6 +238,7 @@ class Blackjack():
         self.server_hand.append(self.deal_card_out())
         self.dealer_hand.append(self.deal_card_out())
 
+
     def calculate_hand_value(self, hand) -> int:
         hand_val = 0
         for card in hand:
@@ -245,7 +249,7 @@ class Blackjack():
                 card_value = 11
             hand_val += int(card_value)
 
-        # see if bust and if so see if any aces can be turned to 1s
+        # see if bust and if so see if any aces can be turned to 1s as ace can be 11 or 1
         if hand_val > 21:
             for card in hand:
                 card_value = card[1]
@@ -253,12 +257,12 @@ class Blackjack():
                     hand_val -= 10
         return hand_val
 
+
     def play_server_turn(self) -> int:
-        print(f"Dealer's Showing Card: {self.dealer_hand[0]}")
         server_choice = 0
         while server_choice != '2':
             self.server_hand_value = self.calculate_hand_value(self.server_hand)
-            print(f"Server hand value: {self.server_hand_value}  Server Cards: {self.server_hand}")
+            print(f"Server hand value: {self.server_hand_value}  Server Cards: {self.server_hand} Dealer's Showing Card: {self.dealer_hand[0]}")
             if self.server_hand_value > 21:
                 print("Server busted!")
                 return 0
@@ -270,7 +274,11 @@ class Blackjack():
             if server_choice == '1':
                 server_dealt_card = self.deal_card_out()
                 self.server_hand.append(server_dealt_card)
+
+        # print results to client and terminal then return - we only show client what happened when turn is over
+        self.send_same_msg_to_server_and_client(f"Server turn results.  Server hand value: {self.server_hand_value}.  Server cards: {self.server_hand}.")
         return 0
+
 
     def play_client_turn(self) -> int:
         client_choice = 0
@@ -278,10 +286,7 @@ class Blackjack():
         while client_choice != '2':
             self.client_hand_value = self.calculate_hand_value(self.client_hand)
             if self.client_hand_value > 21:
-                print("Client busted!")
-                send_message_to_client("Client busted! Press any key to continue.", conn_client_socket)
-                msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
-                client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+                self.send_same_msg_to_server_and_client(f"Client busted with hand value of {self.client_hand_value}!")
                 return 0
             send_message_to_client(f"Client's Turn: Enter 1 to hit, 2 to stay.  Client's cards: {self.client_hand}" +
                                    f"Client hand value: {self.client_hand_value} Dealer's Showing Card" +
@@ -295,12 +300,10 @@ class Blackjack():
             if client_choice == '1':
                 client_dealt_card = self.deal_card_out()
                 self.client_hand.append(client_dealt_card)
-                print(f"Info for Server: Client got card: {client_dealt_card}.")
-                send_message_to_client(f"Client got card: {client_dealt_card}. Press any key to continue.", conn_client_socket)
-                msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
-                continue_str = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+                self.send_same_msg_to_server_and_client(f" Client got card: {client_dealt_card}.")
 
         return 0
+
 
     def play_dealer_turn(self) -> None:
 
@@ -313,10 +316,7 @@ class Blackjack():
             self.dealer_hand.append(dealer_dealt_card)
             self.dealer_hand_value = self.calculate_hand_value(self.dealer_hand)
 
-        print(f"Dealer's Hand Value: {self.dealer_hand_value}  Dealer's Cards: {self.dealer_hand}")
-        send_message_to_client(f"Dealer's Hand Value: {self.dealer_hand_value} Dealer's Cards: {self.dealer_hand}.  Press any key to continue.", conn_client_socket)
-        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
-        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+        self.send_same_msg_to_server_and_client(f"Dealer's Hand Value: {self.dealer_hand_value}  Dealer's Cards: {self.dealer_hand}")
 
 
     def calculate_round_result(self) -> None:
@@ -339,28 +339,34 @@ class Blackjack():
                 self.server_score += 100
                 server_win = True
 
-        print(f"Server Wins Round?: {server_win}  Client Wins Round?: {client_win}  Client Score: {self.client_score} Server Score: {self.server_score} ")
-        send_message_to_client(f"Server Wins Round?: {server_win}  Client Wins Round?: {client_win}  Client Score: {self.client_score} Server Score: {self.server_score}.  Press any key to continue.", conn_client_socket)
-        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
-        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+        self.send_same_msg_to_server_and_client(f"Server Wins Round?: {server_win}" +
+                                                f"Client Wins Round?: {client_win}" +
+                                                f"Client Score: {self.client_score}" +
+                                                f"Server Score: {self.server_score}")
+
 
     def calculate_winner(self) -> None:
 
         if self.client_score == self.server_score:
-            print(f"GAME OVER - Tie!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.")
-            send_message_to_client(f"GAME OVER - Tie!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.", conn_client_socket)
+            self.send_same_msg_to_server_and_client(f"GAME OVER - It's a Tie!  Client Score: {self.client_score} Server Score: {self.server_score}.  Resuming normal chat function.")
         elif self.client_score > self.server_score:
-            print(f"GAME OVER - Client Wins!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.")
-            send_message_to_client(f"GAME OVER - Client Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Resuming normal chat function.", conn_client_socket)
+            self.send_same_msg_to_server_and_client(f"GAME OVER - Client Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Resuming normal chat function.")
         else:
-            print(f"GAME OVER - Server Wins!  Client Score: {self.client_score} Server Score: {self.server_score}. Resuming normal chat function.")
-            send_message_to_client(f"GAME OVER - Server Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Resuming normal chat function.", conn_client_socket)
-
-        # msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
-        # msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
+            self.send_same_msg_to_server_and_client(f"GAME OVER - Server Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Resuming normal chat function.")
 
 
+    def send_same_msg_to_server_and_client(self, message) -> None:
+        """
+        This sends the same message to the client and server.  Then waits for the client to press a key to continue.
 
+        Otherwise the client has no idea what is happening while the game unfolds.
+        """
+        server_message = message + " Waiting for client to press a key..."
+        client_message = message + " Press any key to continue."
+        print(server_message)
+        send_message_to_client(client_message, conn_client_socket)
+        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+        get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
 
 # https://stackoverflow.com/questions/21120947/catching-keyboardinterrupt-in-python-during-program-shutdown
