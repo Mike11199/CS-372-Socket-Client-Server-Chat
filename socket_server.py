@@ -60,7 +60,6 @@ def ascii_game_server_program() -> None:
             if msg_from_client == "play blackjack":
                 print("Client requested to play blackjack!\n")
                 play_blackjack()
-                continue
         except Exception as e:
             print(f"Error: {e}")
             conn_client_socket, conn_client_addr = None, None
@@ -362,8 +361,8 @@ class Blackjack():
 
         score_results_msg = (
             f"Client Score: {self.client_score}" +
-            f"\n Server Score: {self.server_score}." +
-            f"\n Resuming normal chat function.")
+            f"\nServer Score: {self.server_score}." +
+            "\nResuming normal chat function.")
 
         if self.client_score == self.server_score:
             self.send_same_msg_to_server_and_client(f"GAME OVER - It's a Tie! \n" + score_results_msg)
