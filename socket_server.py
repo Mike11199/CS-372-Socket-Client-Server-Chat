@@ -222,6 +222,9 @@ class Blackjack():
         self._turn_count += 1
 
     def deal_first_cards_out(self):
+        self.client_hand = []
+        self.server_hand = []
+        self.dealer_hand = []
         self.client_hand.append(self.deal_card_out())
         self.server_hand.append(self.deal_card_out())
         self.dealer_hand.append(self.deal_card_out())
@@ -272,7 +275,7 @@ class Blackjack():
             self.client_hand_value = self.calculate_hand_value(self.client_hand)
             if self.client_hand_value > 21:
                 print("Client busted!")
-                send_message_to_client("Client busted! Please press any key to continue.", conn_client_socket)
+                send_message_to_client("Client busted! Press any key to continue.", conn_client_socket)
                 msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
                 client_choice = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
                 return 0
@@ -287,7 +290,7 @@ class Blackjack():
                 client_dealt_card = self.deal_card_out()
                 self.client_hand.append(client_dealt_card)
                 print(f"Info for Server: Client got card: {client_dealt_card}.")
-                send_message_to_client(f"Client got card: {client_dealt_card}. Press 1 to continue.", conn_client_socket)
+                send_message_to_client(f"Client got card: {client_dealt_card}. Press any key to continue.", conn_client_socket)
                 msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
                 continue_str = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
@@ -299,35 +302,59 @@ class Blackjack():
 
         while self.dealer_hand_value < 17:
             if self.dealer_hand_value > 21:
-                print("Dealer busted!")
                 continue
             dealer_dealt_card = self.deal_card_out()
             self.dealer_hand.append(dealer_dealt_card)
             self.dealer_hand_value = self.calculate_hand_value(self.dealer_hand)
 
+        print(f"Dealer's Hand Value: {self.dealer_hand_value}  Dealer's Cards: {self.dealer_hand}")
+        send_message_to_client(f"Dealer's Hand Value: {self.dealer_hand_value} Dealer's Cards: {self.dealer_hand}.  Press any key to continue.", conn_client_socket)
+        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
 
     def calculate_round_result(self):
 
+        server_win = False
+        client_win = False
+
         if self.dealer_hand_value > 21:
             if self.client_hand_value < 22:
                 self.client_score += 100
+                client_win = True
             if self.server_hand_value < 22:
                 self.server_score += 100
+                server_win = True
         else:
              if self.client_hand_value >= self.dealer_hand_value:
                 self.client_score += 100
+                client_win = True
              if self.server_hand_value >= self.dealer_hand_value:
                 self.server_score += 100
+                server_win = True
+
+        print(f"Server Wins Round?: {server_win}  Client Wins Round?: {client_win}  Client Score: {self.client_score} Server Score: {self.server_score} ")
+        send_message_to_client(f"Server Wins Round?: {server_win}  Client Wins Round?: {client_win}  Client Score: {self.client_score} Server Score: {self.server_score}  Press any key to continue.")
+        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
     def calculate_winner(self):
 
         if self.client_score == self.server_score:
-            print("tie")
+            message = f"Tie!  Client Score: {self.client_score} Server Score: {self.server_score}.  Press any key to continue."
+            print(message)
+            send_message_to_client(message)
         elif self.client_score > self.server_score:
-            print("client wins")
+            message = f"Client Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Press any key to continue."
+            print(message)
+            send_message_to_client(message)
         else:
-            print("server wins")
+            message = f"Server Wins!  Client Score: {self.client_score} Server Score: {self.server_score}.  Press any key to continue."
+            print(message)
+            send_message_to_client(message)
+
+        msg_len = get_message_len(conn_client_socket)  # we always receive a 4 byte number for message length
+        msg_from_client = get_message_str_from_client(conn_client_socket, msg_len)  # then we can use that number in next loop
 
 
 
