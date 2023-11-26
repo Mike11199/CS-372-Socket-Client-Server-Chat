@@ -262,7 +262,9 @@ class Blackjack():
         server_choice = 0
         while server_choice != '2':
             self.server_hand_value = self.calculate_hand_value(self.server_hand)
-            print(f"Dealer's Showing Card: {self.dealer_hand[0]} \nServer's Cards: {self.server_hand} \nServer's Hand Value: {self.server_hand_value}.")
+            print(f"Dealer's Showing Card: {self.dealer_hand[0]}" +
+                  f"\nServer's Cards: {self.server_hand}" +
+                  f"\nServer's Hand Value: {self.server_hand_value}.")
             if self.server_hand_value > 21:
                 print("Server busted!")
                 return 0
@@ -276,7 +278,9 @@ class Blackjack():
                 self.server_hand.append(server_dealt_card)
 
         # print results to client and terminal then return - we only show client what happened when turn is over
-        self.send_same_msg_to_server_and_client(f"Server's Turn Results: \nServer's Cards: {self.server_hand} \nServer's Hand Value: {self.server_hand_value}.")
+        self.send_same_msg_to_server_and_client("Server's Turn Results:" +
+                                                f"\nServer's Cards: {self.server_hand}" +
+                                                f"\nServer's Hand Value: {self.server_hand_value}.")
         return 0
 
 
@@ -319,7 +323,8 @@ class Blackjack():
             self.dealer_hand.append(dealer_dealt_card)
             self.dealer_hand_value = self.calculate_hand_value(self.dealer_hand)
 
-        self.send_same_msg_to_server_and_client(f"Dealer's Hand Value: {self.dealer_hand_value} \nDealer's Cards: {self.dealer_hand}")
+        self.send_same_msg_to_server_and_client(f"Dealer's Hand Value: {self.dealer_hand_value}" +
+                                                f"\nDealer's Cards: {self.dealer_hand}")
 
 
     def calculate_round_result(self) -> None:
@@ -350,7 +355,10 @@ class Blackjack():
 
     def calculate_winner(self) -> None:
 
-        score_results_msg = f"Client Score: {self.client_score} \n Server Score: {self.server_score}. \n Resuming normal chat function."
+        score_results_msg = (
+            f"Client Score: {self.client_score}" +
+            f"\n Server Score: {self.server_score}." +
+            f"\n Resuming normal chat function.")
 
         if self.client_score == self.server_score:
             self.send_same_msg_to_server_and_client(f"GAME OVER - It's a Tie! \n" + score_results_msg)
