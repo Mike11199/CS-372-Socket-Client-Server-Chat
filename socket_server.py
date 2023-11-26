@@ -76,10 +76,9 @@ def ascii_game_server_program() -> None:
 
 
 def send_disconnect_request_to_client(message):
-    print("Sending \q to end connection with client!")
+    print("Sending \q to end connection with client and terminating!")
     send_message_to_client(message, conn_client_socket)
     time.sleep(2) # give client 2 seconds to exit
-    sys.exit(0)
     conn_client_socket.close()
     sys.exit(0)
 
@@ -155,8 +154,9 @@ def get_message_str_from_client(socket_conn: socket.socket, message_len_byte_exp
     msg = decode_string(data_buffer)
     # print(f"Message from client: {msg}")
     if msg == '/q':
-        print("Client closed connection!")
+        print("Client closed connection with /q!  Exiting with client.")
         socket_conn.close()
+        sys.exit(0)
         raise Exception
     return msg
 
