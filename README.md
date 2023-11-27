@@ -18,7 +18,8 @@
 - Otherwise the client/server could hang forever on the recv() call as it waits for additional bytes
 - After sending the message length. The program then sends the message itself over the socket.
 
-![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/48d65eaf-b3b9-4c1e-a2bc-a22e052bff88")
+![image](https://github.com/Mike11199/CS-372-Socket-Client-Server-Chat/assets/91037796/98a4f4e9-8f6f-4183-81d9-e0306104a16e)
+
 
 - When receiving a message, the program first receives exactly 4 bytes of data telling it the message length.  Then opens the socket to receives that many bytes of data.
 
